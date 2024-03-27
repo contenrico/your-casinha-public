@@ -6,6 +6,8 @@ import base64
 import re
 import json
 import pickle
+import boto3
+from io import StringIO
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -14,7 +16,9 @@ from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# Define paths
+from .aws import *
+
+# Define paths - TODO delete
 folder = 'data'
 creds_name = 'credentials.json'
 
@@ -27,57 +31,130 @@ SCOPES_SHEET = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 SAMPLE_SPREADSHEET_ID = '1XNzUH6ydpDt0apgL-a7wuxgxNgRRKMsNwKPpJ74ejbk'
 SAMPLE_RANGE_NAME = 'Form Responses 1!A1:AI10000'
 
-# Location for the data to be stored - TODO delete
-# folder = 'data'
-# creds_name = 'credentials.json'
-# token_name = 'sheet_token.json'
-# sheet_name = 'form_responses.csv'
-
-def get_form(
-            folder=folder, 
-            creds_name=creds_name, 
-            token_name='sheet_token.json', 
-            sheet_name='form_responses.csv'
-            ):
+# def get_form(
+#             folder=folder, 
+#             creds_name=creds_name, 
+#             token_name='sheet_token.json', 
+#             sheet_name='form_responses.csv'
+#             ):
     
-    # Check if the folder exists
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+#     # Check if the folder exists
+#     if not os.path.exists(folder):
+#         os.makedirs(folder)
 
-    # Create data paths
-    creds_path = os.path.join(folder, creds_name)
-    token_path = os.path.join(folder, token_name)
-    sheet_path = os.path.join(folder, sheet_name)
+#     # Create data paths
+#     creds_path = os.path.join(folder, creds_name)
+#     token_path = os.path.join(folder, token_name)
+#     sheet_path = os.path.join(folder, sheet_name)
 
-    # Check if the credentials file exists
-    if not os.path.exists(creds_path):
-        raise Exception(f"{creds_path} does not exist.")
+#     # Check if the credentials file exists
+#     if not os.path.exists(creds_path):
+#         raise Exception(f"{creds_path} does not exist.")
+
+#     # Go through authetication flow
+#     creds = None
+
+#     # The file token.json stores the user's access and refresh tokens and is created 
+#     # automatically when the authorization flow completes for the first time.
+#     if os.path.exists(token_path):
+#         creds = Credentials.from_authorized_user_file(token_path, SCOPES_SHEET)
+    
+#     # If there are no (valid) credentials available, let the user log in.
+#     try:
+#         if not creds or not creds.valid:
+#             if creds and creds.expired and creds.refresh_token:
+#                 creds.refresh(Request())
+#             else:
+#                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_SHEET)
+#                 creds = flow.run_local_server(port=0)
+#             # Save the credentials for the next run
+#             with open(token_path, 'w') as token:
+#                 token.write(creds.to_json())
+#     except RefreshError:
+#         # If the refresh token is revoked, re-authenticate the user
+#         flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_SHEET)
+#         creds = flow.run_local_server(port=0)
+#         with open(token_path, 'w') as token:
+#             token.write(creds.to_json())
+
+#     # Once authenticated, get the sheet data
+#     try:
+#         service = build('sheets', 'v4', credentials=creds)
+
+#         # Call the Sheets API
+#         sheet = service.spreadsheets()
+#         result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+#                                     range=SAMPLE_RANGE_NAME).execute()
+#         values = result.get('values', [])
+
+#         if not values:
+#             print('No data found.')
+#             return
+
+#         # Use the first row as column headers
+#         columns = values[0]
+
+#         # Make column names unique by appending a suffix to duplicates
+#         unique_columns = []
+#         seen_columns = {}
+#         for col in columns:
+#             if col in seen_columns:
+#                 seen_columns[col] += 1
+#             else:
+#                 seen_columns[col] = 1
+
+#             col = f"{col}_{seen_columns[col]}"    
+#             unique_columns.append(col)
+
+#         data = values[1:]  # Skip the first row (headers)
+
+#         # Create a DataFrame with unique column names
+#         df = pd.DataFrame(data, columns=unique_columns)
+#         df.to_csv(sheet_path)
+
+#         return sheet_path
+
+#     except HttpError as err:
+#         print(err)
+#         return None
+    
+def get_form(
+        creds_name='credentials.json', 
+        token_name='sheet_token.json', 
+        sheet_name='form_responses.csv'
+        ):
+
+    # Check if the credentials file exists in S3
+    if not object_exists(bucket_name, creds_name):
+        raise Exception(f"{creds_name} does not exist in S3 bucket.")
 
     # Go through authetication flow
     creds = None
 
     # The file token.json stores the user's access and refresh tokens and is created 
     # automatically when the authorization flow completes for the first time.
-    if os.path.exists(token_path):
-        creds = Credentials.from_authorized_user_file(token_path, SCOPES_SHEET)
-    
-    # If there are no (valid) credentials available, let the user log in.
+    # Check if the token exists in S3 and load it
+    if object_exists(bucket_name, token_name):
+        token_data = download_object(bucket_name, token_name)
+        creds = Credentials.from_authorized_user_info(json.loads(token_data), SCOPES_SHEET)
+
     try:
+        # Refresh or authenticate credentials
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_SHEET)
+                creds_data = download_object(bucket_name, creds_name)
+                flow = InstalledAppFlow.from_client_config(json.loads(creds_data), SCOPES_SHEET)
                 creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open(token_path, 'w') as token:
-                token.write(creds.to_json())
+            # Save the credentials back to S3
+            s3.put_object(Bucket=bucket_name, Key=token_name, Body=creds.to_json())
     except RefreshError:
-        # If the refresh token is revoked, re-authenticate the user
-        flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_SHEET)
+        # Handle refresh token errors, re-authenticate, and save new token
+        creds_data = download_object(bucket_name, creds_name)
+        flow = InstalledAppFlow.from_client_config(json.loads(creds_data), SCOPES_SHEET)
         creds = flow.run_local_server(port=0)
-        with open(token_path, 'w') as token:
-            token.write(creds.to_json())
+        s3.put_object(Bucket=bucket_name, Key=token_name, Body=creds.to_json())
 
     # Once authenticated, get the sheet data
     try:
@@ -93,6 +170,7 @@ def get_form(
             print('No data found.')
             return
 
+        ### Process the data ###
         # Use the first row as column headers
         columns = values[0]
 
@@ -112,9 +190,15 @@ def get_form(
 
         # Create a DataFrame with unique column names
         df = pd.DataFrame(data, columns=unique_columns)
-        df.to_csv(sheet_path)
+        
+        # Convert DataFrame to CSV string
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer)
+        
+        # Upload CSV to S3
+        s3.put_object(Bucket=bucket_name, Key=sheet_name, Body=csv_buffer.getvalue())
 
-        return sheet_path
+        return f"S3://{bucket_name}/{sheet_name}"
 
     except HttpError as err:
         print(err)

@@ -26,7 +26,7 @@ checkin_date = checkin_date.strftime('%d-%m-%Y')
 if st.button('Get form responses'):
     # Get form responses
     sheet_path = google_api.get_form()
-    clean_df = data_processing.clean_sheet(sheet_path)
+    clean_df = data_processing.clean_sheet()
     filtered_df = data_processing.filter_df_on_checkin_date(clean_df, checkin_date)
 
     # Filter and assign to session state - TODO get these columns to be displayed, but keep all of them in df

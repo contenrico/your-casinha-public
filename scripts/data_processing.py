@@ -4,16 +4,19 @@ import pandas as pd
 import re
 from datetime import datetime
 
+from .aws import *
+
 # Define paths
 records_json = os.path.join(os.getcwd(), 'data', 'records.json')
 
 
 ### SEF processing functions ###
 
-def clean_sheet(sheet_path):
+def clean_sheet(sheet_name='form_responses.csv'):
 
     # Read the original CSV file into a DataFrame
-    df = pd.read_csv(sheet_path).drop(columns=['Unnamed: 0'])
+    obj = s3.get_object(Bucket=bucket_name, Key=sheet_name)
+    df = pd.read_csv(obj['Body']).drop(columns=['Unnamed: 0'])
 
     # Melt the DataFrame to reshape it
     melted_df = pd.melt(df, id_vars=['Timestamp_1'], var_name='Variable', value_name='Value')
