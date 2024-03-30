@@ -17,14 +17,3 @@ def object_exists(bucket, key):
 def download_object(bucket, key):
     obj = s3.get_object(Bucket=bucket, Key=key)
     return obj['Body'].read()
-
-
-# key = 'form_responses.csv'
-# obj = s3.get_object(Bucket=bucket_name, Key=key)
-# df = pd.read_csv(obj['Body'])
-
-# print(df)
-
-# print(s3.get_object(Bucket=bucket_name, Key=key)['Body'])
-
-# print(obj['Body'].read())

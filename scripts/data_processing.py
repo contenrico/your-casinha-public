@@ -63,24 +63,35 @@ def filter_df_on_checkin_date(clean_df, today=None):
     return filtered_df
 
 
-def write_new_records_to_json(filtered_df, records_json=records_json):
+def write_new_records_to_json(filtered_df, records_json='records.json'):
 
-    with open(records_json) as f:
-        records = json.load(f)
+    if not object_exists(bucket_name, records_json):
+        print('records.json file not found in S3 bucket.')
+        return
+    else:
 
-    previous_cum_df = pd.DataFrame(records[-1]['cum'])
-    incr_df = filtered_df
-    cum_df = pd.concat([previous_cum_df, incr_df]).drop_duplicates().reset_index(drop=True)
+        obj = download_object(bucket_name, records_json)
+        records = json.loads(obj)
 
-    new_dict = {
-        'incr': incr_df.to_dict('records'),
-        'cum': cum_df.to_dict('records')
-    }
+        previous_cum_df = pd.DataFrame(records[-1]['cum'])
+        incr_df = filtered_df
+        cum_df = pd.concat([previous_cum_df, incr_df]).drop_duplicates().reset_index(drop=True)
 
-    records.append(new_dict)
+        new_dict = {
+            'incr': incr_df.to_dict('records'),
+            'cum': cum_df.to_dict('records')
+        }
 
-    with open(records_json, 'w') as f:
-        json.dump(records, f)
+        records.append(new_dict)
+
+        # Serialize the updated records list to a JSON string
+        records_json_updated = json.dumps(records)
+
+        # Save the updated JSON back to the S3 bucket
+        s3.put_object(Bucket=bucket_name, Key=records_json, Body=records_json_updated)
+        print(f"Updated records saved to {records_json} in S3 bucket '{bucket_name}'.")
+
+        return
 
 
 ### Invoice processing functions ###
