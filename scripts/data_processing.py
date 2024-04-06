@@ -63,6 +63,21 @@ def filter_df_on_checkin_date(clean_df, today=None):
     return filtered_df
 
 
+def filter_df_on_name(clean_df, first_name=None, last_name=None):
+
+    # Filter the DataFrame based on combinations of first and last name
+    if first_name and last_name:
+        filtered_df = clean_df[(clean_df['First name'] == first_name) & (clean_df['Last name'] == last_name)]
+    elif first_name:
+        filtered_df = clean_df[clean_df['First name'] == first_name]
+    elif last_name:
+        filtered_df = clean_df[clean_df['Last name'] == last_name]
+    else:
+        filtered_df = clean_df
+
+    return filtered_df
+
+
 def write_new_records_to_json(filtered_df, records_json='records.json'):
 
     if not object_exists(bucket_name, records_json):

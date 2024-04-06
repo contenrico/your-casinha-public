@@ -24,16 +24,40 @@ if 'sef_completed' not in st.session_state:
     st.session_state.sef_completed = False
 
 ### --- GET AND DISPLAY FORM RESPONSES --- ###
+    
+# Create a checkbox and check its state
+search_by_name = st.checkbox('Search by name')
 
-# Add input field with today's date by default
-checkin_date = st.date_input('Check-in date: ', value=pd.to_datetime("today"), format="DD-MM-YYYY")
-checkin_date = checkin_date.strftime('%d-%m-%Y')
+# Initialize input names
+first_name = ''
+last_name = ''
+
+# If the checkbox is ticked, show the input fields
+if search_by_name:
+    # Create two columns
+    col1, col2 = st.columns(2)
+
+    # Add input field with name
+    with col1:
+        first_name = st.text_input('First name: ')
+    with col2:
+        last_name = st.text_input('Last name: ')
+else:
+    # Add input field with today's date by default
+    checkin_date = st.date_input('Check-in date: ', value=pd.to_datetime("today"), format="DD-MM-YYYY")
+    checkin_date = checkin_date.strftime('%d-%m-%Y')
 
 if st.button('Get form responses'):
     # Get form responses
     sheet_path = google_api.get_form()
     clean_df = data_processing.clean_sheet()
-    filtered_df = data_processing.filter_df_on_checkin_date(clean_df, checkin_date)
+
+    # Filter df based on check-in date only if name is empty
+    if first_name == '' and last_name == '':
+        filtered_df = data_processing.filter_df_on_checkin_date(clean_df, checkin_date)
+    else:
+        # Filter df based on name
+        filtered_df = data_processing.filter_df_on_name(clean_df, first_name, last_name)
 
     # Filter and assign to session state - TODO get these columns to be displayed, but keep all of them in df
     st.session_state.filtered_df = filtered_df[['First name', 'Last name', 
@@ -56,29 +80,20 @@ def update_ui(message):
     else:
         st.session_state.sef_completed = False
 
-# if st.button('Register guests on SEF'): 
-#     #TODO validate check-in and check-out dates, specifically if check-in is after today, can't click
-#     # Run SEF automation
-#     message = web_automation.fill_in_sef_form(st.session_state.filtered_df)
-
-#     # Write records to json if successful
-#     if message == 'SEF Completed':
-#         data_processing.write_new_records_to_json(st.session_state.filtered_df)
-#         st.success('Guests registered successfully!')
-
 # Displaying the update message dynamically
 message_placeholder = st.empty()
 message_placeholder.text(st.session_state.update_message)
 
-# TODO: TEST FUNCTION ALONE AS IT'S NOT WORKING 
 if st.button('Register guests on SEF'): #TODO validate check-in and check-out dates, specifically if check-in is after today, can't click
     # Reset completion state
     st.session_state.sef_completed = False
+
     # Run SEF automation with the adapted callback
     web_automation.fill_in_sef_form(df=st.session_state.filtered_df, callback=update_ui)
+
     # After completion, check if it was successful
     if st.session_state.sef_completed:
-        # data_processing.write_new_records_to_json(st.session_state.filtered_df)
+        data_processing.write_new_records_to_json(st.session_state.filtered_df)
         st.success('Guests registered successfully!')
     else:
         st.error('SEF registration failed.')
