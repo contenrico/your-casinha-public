@@ -6,9 +6,6 @@ from datetime import datetime
 
 from .aws import *
 
-# Define paths
-records_json = os.path.join(os.getcwd(), 'data', 'records.json')
-
 
 ### SEF processing functions ###
 
@@ -83,8 +80,8 @@ def write_new_records_to_json(filtered_df, records_json='records.json'):
     if not object_exists(bucket_name, records_json):
         print('records.json file not found in S3 bucket.')
         return
+    
     else:
-
         obj = download_object(bucket_name, records_json)
         records = json.loads(obj)
 
@@ -110,17 +107,21 @@ def write_new_records_to_json(filtered_df, records_json='records.json'):
 
 
 ### Invoice processing functions ###
+def get_latest_record(records_json='records.json'):
 
-def get_latest_record(records_json=records_json):
+    if not object_exists(bucket_name, records_json):
+        print('records.json file not found in S3 bucket.')
+        return
+    
+    else:
+        obj = download_object(bucket_name, records_json)
+        records = json.loads(obj)
 
-    with open(records_json) as f:
-        records = json.load(f)
+        last_cum_dict = records[-1]['cum']
 
-    last_cum_dict = records[-1]['cum']
+        last_cum_df = pd.DataFrame(last_cum_dict)
 
-    last_cum_df = pd.DataFrame(last_cum_dict)
-
-    return last_cum_df
+        return last_cum_df
 
 
 def filter_df_on_checkout_date(clean_df, today=None):
@@ -136,50 +137,55 @@ def filter_df_on_checkout_date(clean_df, today=None):
     return filtered_df
 
 
-def convert_messages_to_df(emails_json):
-    # Load the JSON data containing the messages
-    with open(emails_json, 'r') as json_file:
-        messages = json.load(json_file)
+def convert_messages_to_df(emails_json='emails.json'):
 
-    # Filter messages based on subject and sender criteria
-    filtered_messages = [msg for msg in messages if "payout was sent" in msg["Subject"] and "airbnb" in msg["From"].lower()]
+    if not object_exists(bucket_name, emails_json):
+        print('emails.json file not found in S3 bucket.')
+        return
+    
+    else:
+        obj = download_object(bucket_name, emails_json)
+        messages = json.loads(obj)
 
-    # Create lists to store extracted data
-    dates = []
-    payout_amounts = []
+        # Filter messages based on subject and sender criteria
+        filtered_messages = [msg for msg in messages if "payout was sent" in msg["Subject"] and "airbnb" in msg["From"].lower()]
 
-    # Extract date and payout amount from filtered messages
-    for msg in filtered_messages:
-        date_str = msg["Date"]
-        message = msg["Message"]
+        # Create lists to store extracted data
+        dates = []
+        payout_amounts = []
 
-        # Update the regex to handle currency symbols, thousands separators, and decimal points
-        amount_match = re.search(r'[\u20ac$£]?[,\d]+\.?\d*', message)
-        if amount_match:
-            # Remove any currency symbols and thousands separators before capturing the amount
-            payout_amount = amount_match.group(0).replace(',', '').replace('\u20ac', '').replace('$', '').replace('£', '')
-        else:
-            payout_amount = None
+        # Extract date and payout amount from filtered messages
+        for msg in filtered_messages:
+            date_str = msg["Date"]
+            message = msg["Message"]
 
-        # Parse the date and format it as 'dd-mm-yyyy' while keeping it as a pd.datetime
-        date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S').strftime('%d-%m-%Y')
-        dates.append(pd.to_datetime(date, format='%d-%m-%Y'))
-        payout_amounts.append(payout_amount)
+            # Update the regex to handle currency symbols, thousands separators, and decimal points
+            amount_match = re.search(r'[\u20ac$£]?[,\d]+\.?\d*', message)
+            if amount_match:
+                # Remove any currency symbols and thousands separators before capturing the amount
+                payout_amount = amount_match.group(0).replace(',', '').replace('\u20ac', '').replace('$', '').replace('£', '')
+            else:
+                payout_amount = None
 
-    # Create a DataFrame
-    df = pd.DataFrame({
-        "Date": dates,
-        "Payout Amount": payout_amounts
-    })
+            # Parse the date and format it as 'dd-mm-yyyy' while keeping it as a pd.datetime
+            date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S').strftime('%d-%m-%Y')
+            dates.append(pd.to_datetime(date, format='%d-%m-%Y'))
+            payout_amounts.append(payout_amount)
 
-    # Sort the DataFrame by the 'Date' column
-    df = df.sort_values(by='Date')
+        # Create a DataFrame
+        df = pd.DataFrame({
+            "Date": dates,
+            "Payout Amount": payout_amounts
+        })
 
-    # Convert Date column to string for better display
-    df['Date'] = df['Date'].dt.strftime('%d-%m-%Y')
+        # Sort the DataFrame by the 'Date' column
+        df = df.sort_values(by='Date')
 
-    # Display the sorted DataFrame
-    return df
+        # Convert Date column to string for better display
+        df['Date'] = df['Date'].dt.strftime('%d-%m-%Y')
+
+        # Display the sorted DataFrame
+        return df
 
 
 def get_first_payout_before_date(payout_df, today=None):

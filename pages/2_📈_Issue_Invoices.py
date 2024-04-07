@@ -23,6 +23,8 @@ if 'clean_df' not in st.session_state:
     st.session_state.clean_df = pd.DataFrame()
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = pd.DataFrame()
+if 'invoice_completed' not in st.session_state:
+    st.session_state.invoice_completed = False
 
 # Initialize other variables
 nif = None
@@ -37,7 +39,7 @@ if st.button('Get payout amounts'):
 
     # Get emails and display dataframe of payouts
     emails_json = google_api.get_emails()
-    st.session_state.payout_df = data_processing.convert_messages_to_df(emails_json)
+    st.session_state.payout_df = data_processing.convert_messages_to_df()
 
 # Display latest payout amount and make amount editable
 st.dataframe(st.session_state.payout_df, hide_index=True)
@@ -68,14 +70,38 @@ nif_condition = not st.session_state.filtered_df.empty and st.session_state.filt
 if nif_condition:
     nif = st.text_input('NIF:')
 
+### --- ISSUE INVOICE --- ###
+    
+# Define a callback function to update the UI and track completion
+def update_invoice_ui(message, placeholder=None):
+
+    if placeholder is not None:
+        placeholder.text(message)
+
+    # Check if the process has completed successfully
+    if message == "Done.":
+        st.session_state.invoice_completed = True
+    else:
+        st.session_state.invoice_completed = False
+
 # Run automation to issue invoice
 if st.button('Issue invoice'):
     if nif_condition and len(nif) != 9:
         st.error('Please enter a valid NIF.')
     else:
-        message = web_automation.fill_in_invoice(st.session_state.filtered_df, invoice_amount, invoice_date, nif)
+        # Reset completion state
+        st.session_state.invoice_completed = False
+        message_placeholder = st.empty()
+
+        # Run invoice automation with the adapted callback
+        callback = lambda message: update_invoice_ui(message, message_placeholder)
+        web_automation.fill_in_invoice(callback, 
+                                       st.session_state.filtered_df, 
+                                       invoice_amount, 
+                                       invoice_date, 
+                                       nif)
     
-        if message == 'Invoice Completed':
+        if st.session_state.invoice_completed:
             st.success('Invoice issued successfully!')
         else:
-            st.error(message)
+            st.error('Invoice has not been issued.')

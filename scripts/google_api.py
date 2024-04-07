@@ -18,11 +18,8 @@ from googleapiclient.errors import HttpError
 
 from .aws import *
 
-# Define paths - TODO delete
-folder = 'data'
-creds_name = 'credentials.json'
 
-### SEF-related API calls ###
+###--- SEF-RELATED FUNCTIONS ---###
 
 # If modifying these scopes, delete the file token.json.
 SCOPES_SHEET = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -119,7 +116,7 @@ def get_form(
         return None
     
 
-### Invoice-related API calls ###
+###--- Invoice-related functions ---###
 
 # Define the SCOPES. If modifying it, delete the token.pickle file.
 SCOPES_GMAIL = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -133,75 +130,53 @@ def get_message_body(msg):
 
 
 def get_emails(
-        folder=folder, 
-        creds_name=creds_name, 
+        creds_name='credentials.json',
         token_name='gmail_token.pickle',
         emails_name='emails.json'
-        ):
+    ):
     
-    # Check if the folder exists
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    # Check if emails.json exists in S3 and was last updated today
+    if object_exists(bucket_name, emails_name):
+        # Assuming you save the update time in a separate file or use metadata for this
+        update_time_object_name = emails_name + "_update_time.txt"
+        if object_exists(bucket_name, update_time_object_name):
+            update_time_str = download_object(bucket_name, update_time_object_name).decode('utf-8')
+            if update_time_str == datetime.today().strftime('%Y-%m-%d'):
+                print(f"{emails_name} has already been updated today, {update_time_str}.")
+                return f"s3://{bucket_name}/{emails_name}"
 
-    # Create data paths
-    creds_path = os.path.join(folder, creds_name)
-    token_path = os.path.join(folder, token_name)
-    emails_path = os.path.join(folder, emails_name)
+    if not object_exists(bucket_name, creds_name):
+        raise Exception(f"{creds_name} does not exist in S3 bucket.")
 
-    if os.path.exists(emails_path):
-        # Check when emails.json was last updated - if today, return path
-        emails_date = pd.to_datetime(os.path.getmtime(emails_path), unit='s').strftime('%d-%m-%Y')
-
-        if emails_date == datetime.today().strftime('%d-%m-%Y'):
-            return emails_path
-
-    # Check if the credentials file exists
-    if not os.path.exists(creds_path):
-        raise Exception(f"{creds_path} does not exist.")
-
-    # Variable creds will store the user access token.
-    # If no valid token found, we will create one.
     creds = None
 
-    # The file token.pickle contains the user access token.
-    # Check if it exists.
-    if os.path.exists(token_path):
-        # Read the token from the file and store it in the variable creds.
-        with open(token_path, 'rb') as token:
-            creds = pickle.load(token)
+    if object_exists(bucket_name, token_name):
+        token_data = download_object(bucket_name, token_name)
+        creds = pickle.loads(token_data)
 
-    # If credentials are not available or are invalid, ask the user to log in.
     try:
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_GMAIL)
+                creds_data = download_object(bucket_name, creds_name)
+                flow = InstalledAppFlow.from_client_config(json.loads(creds_data), SCOPES_GMAIL)
                 creds = flow.run_local_server(port=0)
-            with open(token_path, 'wb') as token:
-                pickle.dump(creds, token)
-
+            s3.put_object(Bucket=bucket_name, Key=token_name, Body=pickle.dumps(creds))
     except RefreshError:
-        # If the refresh token is revoked, re-authenticate the user
-        flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES_GMAIL)
+        creds_data = download_object(bucket_name, creds_name)
+        flow = InstalledAppFlow.from_client_config(json.loads(creds_data), SCOPES_GMAIL)
         creds = flow.run_local_server(port=0)
-        with open(token_path, 'wb') as token:
-            pickle.dump(creds, token)
+        s3.put_object(Bucket=bucket_name, Key=token_name, Body=pickle.dumps(creds))
 
-    # Connect to the Gmail API.
     service = build('gmail', 'v1', credentials=creds)
-
-    # Request a list of all the messages.
     result = service.users().messages().list(userId='me').execute()
-
-    # Create a list to store messages as dictionaries.
     message_list = []
 
-    # Iterate through all the messages.
     for msg in result.get('messages', []):
         msg_data = service.users().messages().get(userId='me', id=msg['id']).execute()
         msg_body = get_message_body(msg_data)
-        if msg_body is not None:
+        if msg_body:
             payload = msg_data['payload']
             headers = payload['headers']
 
@@ -209,13 +184,11 @@ def get_emails(
             sender = next((d['value'] for d in headers if d['name'] == 'From'), None)
             date_str = next((d['value'] for d in headers if d['name'] == 'Date'), None)
 
-            # Extract the date and time part from the header
             date_match = re.search(r'\d{1,2} \w{3} \d{4} \d{2}:\d{2}:\d{2}', date_str)
             if date_match:
                 received_date_str = date_match.group(0)
                 received_date = datetime.strptime(received_date_str, '%d %b %Y %H:%M:%S')
 
-                # Create a dictionary for the message.
                 message_dict = {
                     "Subject": subject,
                     "From": sender,
@@ -223,10 +196,15 @@ def get_emails(
                     "Message": msg_body
                 }
 
-                # Append the message dictionary to the list.
                 message_list.append(message_dict)
 
-    with open(emails_path, 'w') as json_file:
-        json.dump(message_list, json_file, default=str, indent=2)
+    json_buffer = StringIO()
+    json.dump(message_list, json_buffer, default=str, indent=2)
+    s3.put_object(Bucket=bucket_name, Key=emails_name, Body=json_buffer.getvalue())
 
-    return emails_path
+    # Update the time this operation was performed
+    update_time_str = datetime.today().strftime('%Y-%m-%d')
+    s3.put_object(Bucket=bucket_name, Key=update_time_object_name, Body=update_time_str)
+
+    return f"s3://{bucket_name}/{emails_name}"
+

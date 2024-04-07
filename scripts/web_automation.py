@@ -125,7 +125,135 @@ def fill_in_sef_form(df, callback):
         web.quit()
 
 
-def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
+# def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
+
+#     if filtered_df.empty:
+#         print('Data provided is empty.')
+#         message = 'Data provided is empty.'
+#         return message
+    
+#     # Extract info from df
+#     row = filtered_df.iloc[0]
+#     if not date:
+#         date = pd.to_datetime(row['Check-out date'], dayfirst=True).strftime('%Y-%m-%d')
+#     else:
+#         date = date.strftime('%Y-%m-%d')
+
+#     try:
+
+#         with open(countries_mapping) as f:
+#             countries = json.load(f)
+
+#         web = webdriver.Chrome()
+
+#         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirDocumentos'
+#         web.get(url)
+
+#         time.sleep(2)
+
+#         # Find the label element by its text content (assuming "NIF" is the text)
+#         label_element = web.find_element(By.XPATH, "//label[span='NIF']")
+
+#         # Click the label element to perform the action
+#         label_element.click()
+
+#         time.sleep(1)
+
+#         # Find and fill in the input fields
+#         nif = web.find_element('id', 'username')
+#         senha = web.find_element('id', 'password-nif')
+
+#         nif.send_keys(pdf_nif)
+#         senha.send_keys(pdf_senha)
+
+#         # Locate and click the submit button
+#         submit_button = web.find_element('id', 'sbmtLogin')
+#         submit_button.click()
+
+#         time.sleep(2)
+
+#         # Input date and type of invoice
+#         date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[1]/lf-date/div/div[1]/input')
+#         date_.send_keys(date)
+
+#         type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[2]/lf-dropdown/div/select')
+#         type_.send_keys('Fatura-Recibo')
+
+#         emitir_button = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[3]/button')
+#         emitir_button.click()        
+
+#         time.sleep(2)
+
+#         # Get all fields
+#         country_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[1]/lf-dropdown/div/select')
+#         name_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[2]/div/lf-text/div/input')
+#         payment_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[1]/pf-radio/div/div[1]/label/input')
+#         description_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[2]/div/textarea')
+#         iva_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[6]/div/div[1]/lf-dropdown/div/select')
+#         incidencia_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[7]/div[1]/div/lf-dropdown/div/select')
+#         amount_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[4]/div/div/div/input')
+#         selo_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[8]/div/div/div/input')
+#         first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[1]/div[1]/div[1]/div[3]/button')
+#         second_emitir_ = web.find_element(By.XPATH, '//*[@id="emitirModal"]/div/div/div[3]/button[2]')
+
+#         # Write in fields
+#         country = countries[row['Country of residence']]
+#         country_.send_keys(country)
+
+#         if country.lower() == 'portugal':
+#             nif_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[3]/lf-nif/div/input')
+#             nif_.send_keys(invoice_nif)
+#         else:
+#             passport_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[2]/lf-text/div/input')
+#             passport = row['Passport (or ID) number']
+#             passport_.send_keys(passport)
+
+#         name = row['First name'] + ' ' + row['Last name']
+#         name_.send_keys(name)
+
+#         payment_.click()
+
+#         checkin_date = pd.to_datetime(row['Check-in date'], dayfirst=True).strftime('%d/%m/%Y')
+#         checkout_date = pd.to_datetime(row['Check-out date'], dayfirst=True).strftime('%d/%m/%Y')
+#         al_number = '138454/AL'
+#         address = 'RUA DE MARVILA N 54 R/C E 1950-199 LISBOA'
+#         description = f'Prestação de serviços de alojamento mobilado para turistas, da data {checkin_date} a {checkout_date}, no AL {al_number}, sito na morada: {address}'
+#         description_.send_keys(description)
+
+#         iva = 'IVA - regime de isenção [art.º 53.º]'
+#         iva_.send_keys(iva)
+
+#         incidencia = 'Sem retenção - Art.101º, n.º1 do CIRS'
+#         incidencia_.send_keys(incidencia)
+
+#         amount = amount
+#         amount_.send_keys(amount)
+
+#         selo = '0'
+#         selo_.send_keys(selo)
+
+#         time.sleep(2)
+
+#         first_emitir_.click()
+
+#         time.sleep(2)
+
+#         second_emitir_.click()
+        
+#         time.sleep(5)
+
+#         message = 'Invoice Completed'
+
+#         print(message)
+
+#     except Exception as e:
+
+#         print(f"Error: {e}")
+#         message = e
+    
+#     return message
+
+def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
 
     if filtered_df.empty:
         print('Data provided is empty.')
@@ -144,19 +272,25 @@ def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
         with open(countries_mapping) as f:
             countries = json.load(f)
 
-        web = webdriver.Chrome()
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
 
+        web = webdriver.Chrome(options=chrome_options)
+
+        callback("Opening the IRS website...")
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirDocumentos'
         web.get(url)
 
         time.sleep(2)
 
+        callback("Filling in the login details...")
         # Find the label element by its text content (assuming "NIF" is the text)
         label_element = web.find_element(By.XPATH, "//label[span='NIF']")
 
         # Click the label element to perform the action
         label_element.click()
-
         time.sleep(1)
 
         # Find and fill in the input fields
@@ -169,21 +303,29 @@ def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
         # Locate and click the submit button
         submit_button = web.find_element('id', 'sbmtLogin')
         submit_button.click()
-
         time.sleep(2)
 
+        callback("Logged in successfully.")
+        time.sleep(1)
+
+        callback("Filling in the date and type of invoice...")
         # Input date and type of invoice
         date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[1]/lf-date/div/div[1]/input')
         date_.send_keys(date)
 
         type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[2]/lf-dropdown/div/select')
         type_.send_keys('Fatura-Recibo')
-
+        
+        # Scroll into view (if needed)
         emitir_button = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[3]/button')
-        emitir_button.click()        
+        web.execute_script("arguments[0].scrollIntoView(true);", emitir_button)
+        time.sleep(1)  # Just to be safe, give it a moment
 
+        # Click using JavaScript
+        web.execute_script("arguments[0].click();", emitir_button)    
         time.sleep(2)
 
+        callback("Filling in the invoice details...")
         # Get all fields
         country_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[1]/lf-dropdown/div/select')
         name_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[2]/div/lf-text/div/input')
@@ -193,8 +335,6 @@ def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
         incidencia_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[7]/div[1]/div/lf-dropdown/div/select')
         amount_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[4]/div/div/div/input')
         selo_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[8]/div/div/div/input')
-        first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[1]/div[1]/div[1]/div[3]/button')
-        second_emitir_ = web.find_element(By.XPATH, '//*[@id="emitirModal"]/div/div/div[3]/button[2]')
 
         # Write in fields
         country = countries[row['Country of residence']]
@@ -220,37 +360,36 @@ def fill_in_invoice(filtered_df, amount, date=None, invoice_nif=None):
         description = f'Prestação de serviços de alojamento mobilado para turistas, da data {checkin_date} a {checkout_date}, no AL {al_number}, sito na morada: {address}'
         description_.send_keys(description)
 
-        iva = 'IVA - regime de isenção [art.º 53.º]'
+        iva = 'Continente - 6% [taxa reduzida atual]'
         iva_.send_keys(iva)
 
         incidencia = 'Sem retenção - Art.101º, n.º1 do CIRS'
         incidencia_.send_keys(incidencia)
 
-        amount = amount
+        amount = float(amount)
+        amount = round(amount/1.06, 2) # Remove the 6% VAT
+        amount = str(amount)
         amount_.send_keys(amount)
 
         selo = '0'
         selo_.send_keys(selo)
-
         time.sleep(2)
 
-        first_emitir_.click()
-
+        callback("Submitting the invoice (first button)...")
+        first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[1]/div[1]/div[1]/div[3]/button')
+        web.execute_script("arguments[0].click();", first_emitir_)  
         time.sleep(2)
 
-        second_emitir_.click()
-        
-        time.sleep(5)
+        callback("Submitting the invoice (second button)...")
+        second_emitir_ = web.find_element(By.XPATH, '//*[@id="emitirModal"]/div/div/div[3]/button[2]')
+        web.execute_script("arguments[0].click();", second_emitir_)  
+        time.sleep(2)
 
-        message = 'Invoice Completed'
-
-        print(message)
+        callback("Done.")
 
     except Exception as e:
+        callback(f"Error when issuing the invoice: {e}")
 
-        print(f"Error: {e}")
-        message = e
-    
-    return message
-
+    finally:
+        web.quit()
 
