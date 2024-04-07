@@ -94,8 +94,8 @@ if st.button('Issue invoice'):
         message_placeholder = st.empty()
 
         # Run invoice automation with the adapted callback
-        callback = lambda message: update_invoice_ui(message, message_placeholder)
-        web_automation.fill_in_invoice(callback, 
+        invoice_callback = lambda message: update_invoice_ui(message, message_placeholder)
+        web_automation.fill_in_invoice(invoice_callback, 
                                        st.session_state.filtered_df, 
                                        invoice_amount, 
                                        invoice_date, 

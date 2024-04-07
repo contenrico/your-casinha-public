@@ -18,8 +18,6 @@ st.title('Register New Guests')
 # Initialize session state variables
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = pd.DataFrame()
-if 'update_message' not in st.session_state:
-    st.session_state.update_message = "Click the button to start the process..."
 if 'sef_completed' not in st.session_state:
     st.session_state.sef_completed = False
 
@@ -72,24 +70,25 @@ st.session_state.filtered_df = st.data_editor(st.session_state.filtered_df, hide
 ### --- REGISTER GUESTS ON SEF --- ###
 
 # Define a callback function to update the UI and track completion
-def update_ui(message):
-    st.session_state.update_message = message
+def update_sef_ui(message, placeholder=None):
+
+    if placeholder is not None:
+        placeholder.text(message)
+
     # Check if the process has completed successfully
-    if message == "SEF registration completed successfully.":
+    if message == "Done.":
         st.session_state.sef_completed = True
     else:
         st.session_state.sef_completed = False
 
-# Displaying the update message dynamically
-message_placeholder = st.empty()
-message_placeholder.text(st.session_state.update_message)
-
 if st.button('Register guests on SEF'): #TODO validate check-in and check-out dates, specifically if check-in is after today, can't click
     # Reset completion state
     st.session_state.sef_completed = False
+    message_placeholder = st.empty()
 
     # Run SEF automation with the adapted callback
-    web_automation.fill_in_sef_form(df=st.session_state.filtered_df, callback=update_ui)
+    sef_callback = lambda message: update_sef_ui(message, message_placeholder)
+    web_automation.fill_in_sef_form(df=st.session_state.filtered_df, callback=sef_callback)
 
     # After completion, check if it was successful
     if st.session_state.sef_completed:
