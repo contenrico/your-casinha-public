@@ -144,12 +144,14 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         with open(countries_mapping) as f:
             countries = json.load(f)
 
+        # Run headlessly - comment out for debugging
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
 
         web = webdriver.Chrome(options=chrome_options)
+        # web = webdriver.Chrome() # NOTE: for debugging purposes
 
         callback("Opening the IRS website...")
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirDocumentos'
@@ -241,6 +243,13 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         amount = float(amount)
         amount = round(amount/1.06, 2) # Remove the 6% VAT
         amount = str(amount)
+
+        # Make sure there are two decimal places
+        if '.' not in amount:
+            amount = amount + '.00'
+        elif len(amount.split('.')[1]) == 1:
+            amount = amount + '0'
+        
         amount_.send_keys(amount)
 
         selo = '0'
