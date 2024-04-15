@@ -16,8 +16,8 @@ st.set_page_config(page_title="Register Guests", page_icon="🌍")
 st.title('Register New Guests')
 
 # Initialize session state variables
-if 'filtered_df' not in st.session_state:
-    st.session_state.filtered_df = pd.DataFrame()
+if 'filtered_sef_df' not in st.session_state:
+    st.session_state.filtered_sef_df = pd.DataFrame()
 if 'sef_completed' not in st.session_state:
     st.session_state.sef_completed = False
 
@@ -52,20 +52,20 @@ if st.button('Get form responses'):
 
     # Filter df based on check-in date only if name is empty
     if first_name == '' and last_name == '':
-        filtered_df = data_processing.filter_df_on_checkin_date(clean_df, checkin_date)
+        filtered_sef_df = data_processing.filter_df_on_checkin_date(clean_df, checkin_date)
     else:
         # Filter df based on name
-        filtered_df = data_processing.filter_df_on_name(clean_df, first_name, last_name)
+        filtered_sef_df = data_processing.filter_df_on_name(clean_df, first_name, last_name)
 
     # Filter and assign to session state - TODO get these columns to be displayed, but keep all of them in df
-    st.session_state.filtered_df = filtered_df[['First name', 'Last name', 
+    st.session_state.filtered_sef_df = filtered_sef_df[['First name', 'Last name', 
                                                 'Check-in date', 'Check-out date',
                                                 'Date of birth', 'Nationality', 'City of birth',
                                                 'City of residence', 'Country of residence',
                                                 'Passport (or ID) number', 'Country of issue']]
 
 # Editable DataFrame
-st.session_state.filtered_df = st.data_editor(st.session_state.filtered_df, hide_index=True)
+st.session_state.filtered_sef_df = st.data_editor(st.session_state.filtered_sef_df, hide_index=True)
 
 ### --- REGISTER GUESTS ON SEF --- ###
 
@@ -88,11 +88,11 @@ if st.button('Register guests on SEF'): #TODO validate check-in and check-out da
 
     # Run SEF automation with the adapted callback
     sef_callback = lambda message: update_sef_ui(message, message_placeholder)
-    web_automation.fill_in_sef_form(df=st.session_state.filtered_df, callback=sef_callback)
+    web_automation.fill_in_sef_form(df=st.session_state.filtered_sef_df, callback=sef_callback)
 
     # After completion, check if it was successful
     if st.session_state.sef_completed:
-        data_processing.write_new_records_to_json(st.session_state.filtered_df)
+        data_processing.write_new_records_to_json(st.session_state.filtered_sef_df)
         st.success('Guests registered successfully!')
     else:
         st.error('SEF registration failed.')

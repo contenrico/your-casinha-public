@@ -21,13 +21,14 @@ if 'payout_df' not in st.session_state:
     st.session_state.payout_df = pd.DataFrame()
 if 'clean_df' not in st.session_state:
     st.session_state.clean_df = pd.DataFrame()
-if 'filtered_df' not in st.session_state:
-    st.session_state.filtered_df = pd.DataFrame()
+if 'invoice_df' not in st.session_state:
+    st.session_state.invoice_df = pd.DataFrame()
 if 'invoice_completed' not in st.session_state:
     st.session_state.invoice_completed = False
 
 # Initialize other variables
 nif = None
+invoice_df = pd.DataFrame()
 
 # Add input field with today's date by default
 checkout_date = st.date_input('Check-out date: ', value=pd.to_datetime("today"), format="DD-MM-YYYY")
@@ -53,22 +54,71 @@ if not st.session_state.payout_df.empty:
 
 # Get guest's details
 if not st.session_state.clean_df.empty:
-    filtered_df = data_processing.filter_df_on_checkout_date(st.session_state.clean_df, checkout_date)
+    invoice_df = data_processing.filter_df_on_checkout_date(st.session_state.clean_df, checkout_date)
 
-    # Filter and assign to session state - TODO get these columns to be displayed, but keep all of them in df
-    st.session_state.filtered_df = filtered_df[['First name', 'Last name', 
-                                                'Check-in date', 'Check-out date',
-                                                'Date of birth', 'Nationality', 'City of birth',
-                                                'City of residence', 'Country of residence',
-                                                'Passport (or ID) number', 'Country of issue']]
-    st.subheader('Details on the invoice:')
-    invoice_date = st.date_input('Invoice date:', value=pd.to_datetime(checkout_date, dayfirst=True), format="DD-MM-YYYY")
-    st.session_state.filtered_df = st.data_editor(st.session_state.filtered_df.head(1), hide_index=True)
+    # Filter and assign to session state
+    # st.session_state.invoice_df = invoice_df[['First name', 'Last name', 
+    #                                             'Check-in date', 'Check-out date',
+    #                                             'Date of birth', 'Nationality', 'City of birth',
+    #                                             'City of residence', 'Country of residence',
+    #                                             'Passport (or ID) number', 'Country of issue']].head(1)
+    invoice_df = invoice_df[['First name', 'Last name', 
+                            'Check-in date', 'Check-out date',
+                            'Date of birth', 'Nationality', 'City of birth',
+                            'City of residence', 'Country of residence',
+                            'Passport (or ID) number', 'Country of issue']].head(1)
+    
+# Display the guest's details in two columns
+st.subheader('Details on the invoice:')
+col1, col2 = st.columns(2)
+# with col1:
+#     first_name = st.text_input('First name:', value=st.session_state.invoice_df['First name'].values[0] if not st.session_state.invoice_df.empty else '')
+#     checkin_date = st.date_input('Check-in date:', format="DD-MM-YYYY", value=pd.to_datetime(st.session_state.invoice_df['Check-in date'].values[0], dayfirst=True) if not st.session_state.invoice_df.empty else pd.to_datetime("today"))
+#     invoice_date = st.date_input('Invoice date:', format="DD-MM-YYYY", value=pd.to_datetime(checkout_date, dayfirst=True))
+#     passport = st.text_input('Passport number:', value=st.session_state.invoice_df['Passport (or ID) number'].values[0] if not st.session_state.invoice_df.empty else '')
+# with col2:
+#     last_name = st.text_input('Last name:', value=st.session_state.invoice_df['Last name'].values[0] if not st.session_state.invoice_df.empty else '')
+#     checkout_date = st.date_input('Check-out date:', format="DD-MM-YYYY", value=pd.to_datetime(st.session_state.invoice_df['Check-out date'].values[0], dayfirst=True) if not st.session_state.invoice_df.empty else pd.to_datetime("today"))
+#     country = st.text_input('Country of residence:', value=st.session_state.invoice_df['Country of residence'].values[0] if not st.session_state.invoice_df.empty else '')
+#     if country == 'Portugal':
+#         nif = st.text_input('NIF:')
 
-# Allow for NIF input
-nif_condition = not st.session_state.filtered_df.empty and st.session_state.filtered_df[['Country of residence']].values[0][0] == 'Portugal'
-if nif_condition:
-    nif = st.text_input('NIF:')
+with col1:
+    first_name = st.text_input('First name:', value=invoice_df['First name'].values[0] if not invoice_df.empty else '')
+    checkin_date = st.date_input('Check-in date:', format="DD-MM-YYYY", value=pd.to_datetime(invoice_df['Check-in date'].values[0], dayfirst=True) if not invoice_df.empty else pd.to_datetime("today"))
+    invoice_date = st.date_input('Invoice date:', format="DD-MM-YYYY", value=pd.to_datetime(checkout_date, dayfirst=True))
+    passport = st.text_input('Passport number:', value=invoice_df['Passport (or ID) number'].values[0] if not invoice_df.empty else '')
+with col2:
+    last_name = st.text_input('Last name:', value=invoice_df['Last name'].values[0] if not invoice_df.empty else '')
+    checkout_date = st.date_input('Check-out date:', format="DD-MM-YYYY", value=pd.to_datetime(invoice_df['Check-out date'].values[0], dayfirst=True) if not invoice_df.empty else pd.to_datetime("today"))
+    country = st.text_input('Country of residence:', value=invoice_df['Country of residence'].values[0] if not invoice_df.empty else '')
+    if country == 'Portugal':
+        nif = st.text_input('NIF:')
+
+if st.button('Overwrite details'):
+    # Put the details in the DataFrame
+    # st.session_state.invoice_df.loc[0, 'First name'] = first_name
+    # st.session_state.invoice_df.loc[0, 'Last name'] = last_name
+    # st.session_state.invoice_df.loc[0, 'Check-in date'] = str(checkin_date)
+    # st.session_state.invoice_df.loc[0, 'Check-out date'] = str(checkout_date)
+    # st.session_state.invoice_df.loc[0, 'Passport (or ID) number'] = passport
+    # st.session_state.invoice_df.loc[0, 'Country of residence'] = country
+
+    invoice_df.loc[0, 'First name'] = first_name
+    invoice_df.loc[0, 'Last name'] = last_name
+    invoice_df.loc[0, 'Check-in date'] = str(checkin_date)
+    invoice_df.loc[0, 'Check-out date'] = str(checkout_date)
+    invoice_df.loc[0, 'Passport (or ID) number'] = passport
+    invoice_df.loc[0, 'Country of residence'] = country
+
+# Display the updated DataFrame
+st.session_state.invoice_df = st.data_editor(invoice_df, hide_index=True)
+
+
+# Handle NIF input
+nif_condition = not st.session_state.invoice_df.empty and st.session_state.invoice_df[['Country of residence']].values[0][0] == 'Portugal'
+# if nif_condition:
+#     nif = st.text_input('NIF:')
 
 ### --- ISSUE INVOICE --- ###
     
@@ -96,7 +146,7 @@ if st.button('Issue invoice'):
         # Run invoice automation with the adapted callback
         invoice_callback = lambda message: update_invoice_ui(message, message_placeholder)
         web_automation.fill_in_invoice(invoice_callback, 
-                                       st.session_state.filtered_df, 
+                                       st.session_state.invoice_df, 
                                        invoice_amount, 
                                        invoice_date, 
                                        nif)

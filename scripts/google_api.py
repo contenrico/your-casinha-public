@@ -15,6 +15,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
+import googleapiclient.discovery
 
 from .aws import *
 
@@ -29,8 +31,8 @@ SAMPLE_SPREADSHEET_ID = '1XNzUH6ydpDt0apgL-a7wuxgxNgRRKMsNwKPpJ74ejbk'
 SAMPLE_RANGE_NAME = 'Form Responses 1!A1:AI10000'
 
     
-def get_form(
-        creds_name='credentials.json', 
+def get_form_with_token(
+        creds_name='credentials_gmail.json', 
         token_name='sheet_token.json', 
         sheet_name='form_responses.csv'
         ):
@@ -114,6 +116,73 @@ def get_form(
     except HttpError as err:
         print(err)
         return None
+
+
+def get_form(
+        creds_name='credentials_sheet.json',
+        sheet_name='form_responses.csv'
+        ):
+
+    # Build the path to the credentials file in S3
+    creds_path = f"s3://{bucket_name}/{creds_name}"
+
+    # Check if the credentials file exists in S3
+    if not object_exists(bucket_name, creds_name):
+        raise Exception(f"{creds_name} does not exist in S3 bucket.")
+
+    # Load service account credentials directly from S3
+    creds_data = download_object(bucket_name, creds_name)
+    creds = service_account.Credentials.from_service_account_info(
+        json.loads(creds_data), scopes=SCOPES_SHEET
+    )
+
+    # Once authenticated, get the sheet data
+    try:
+        service = build('sheets', 'v4', credentials=creds)
+
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                                    range=SAMPLE_RANGE_NAME).execute()
+        values = result.get('values', [])
+
+        if not values:
+            print('No data found.')
+            return None
+
+        ### Process the data ###
+        # Use the first row as column headers
+        columns = values[0]
+
+        # Make column names unique by appending a suffix to duplicates
+        unique_columns = []
+        seen_columns = {}
+        for col in columns:
+            if col in seen_columns:
+                seen_columns[col] += 1
+            else:
+                seen_columns[col] = 1
+
+            col = f"{col}_{seen_columns[col]}"    
+            unique_columns.append(col)
+
+        data = values[1:]  # Skip the first row (headers)
+
+        # Create a DataFrame with unique column names
+        df = pd.DataFrame(data, columns=unique_columns)
+        
+        # Convert DataFrame to CSV string
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer)
+
+        # Upload CSV to S3
+        s3.put_object(Bucket=bucket_name, Key=sheet_name, Body=csv_buffer.getvalue())
+
+        return f"S3://{bucket_name}/{sheet_name}"
+
+    except HttpError as err:
+        print(err)
+        return None
     
 
 ###--- Invoice-related functions ---###
@@ -130,7 +199,7 @@ def get_message_body(msg):
 
 
 def get_emails(
-        creds_name='credentials.json',
+        creds_name='credentials_gmail.json',
         token_name='gmail_token.pickle',
         emails_name='emails.json'
     ):
