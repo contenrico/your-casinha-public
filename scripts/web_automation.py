@@ -266,6 +266,8 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         web.execute_script("arguments[0].click();", second_emitir_)  
         time.sleep(2)
 
+        # time.sleep(10) # NOTE: for debugging purposes
+
         callback("Done.")
 
     except Exception as e:
