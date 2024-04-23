@@ -84,22 +84,9 @@ with col1:
 with col2:
     last_name = st.text_input('Last name:', value=st.session_state.invoice_df['Last name'].values[0] if not st.session_state.invoice_df.empty else '')
     checkout_date = st.date_input('Check-out date:', format="DD-MM-YYYY", value=pd.to_datetime(st.session_state.invoice_df['Check-out date'].values[0], dayfirst=True) if not st.session_state.invoice_df.empty else pd.to_datetime("today"))
-    # country = st.text_input('Country of residence:', value=st.session_state.invoice_df['Country of residence'].values[0] if not st.session_state.invoice_df.empty else '')
     country = st.selectbox('Country of residence:', countries_list, index=countries_list.index(st.session_state.invoice_df['Country of residence'].values[0]) if not st.session_state.invoice_df.empty else 0)
     if country == 'Portugal':
         nif = st.text_input('NIF:')
-
-# with col1:
-#     first_name = st.text_input('First name:', value=invoice_df['First name'].values[0] if not invoice_df.empty else '')
-#     checkin_date = st.date_input('Check-in date:', format="DD-MM-YYYY", value=pd.to_datetime(invoice_df['Check-in date'].values[0], dayfirst=True) if not invoice_df.empty else pd.to_datetime("today"))
-#     invoice_date = st.date_input('Invoice date:', format="DD-MM-YYYY", value=pd.to_datetime(checkout_date, dayfirst=True))
-#     passport = st.text_input('Passport number:', value=invoice_df['Passport (or ID) number'].values[0] if not invoice_df.empty else '')
-# with col2:
-#     last_name = st.text_input('Last name:', value=invoice_df['Last name'].values[0] if not invoice_df.empty else '')
-#     checkout_date = st.date_input('Check-out date:', format="DD-MM-YYYY", value=pd.to_datetime(invoice_df['Check-out date'].values[0], dayfirst=True) if not invoice_df.empty else pd.to_datetime("today"))
-#     country = st.text_input('Country of residence:', value=invoice_df['Country of residence'].values[0] if not invoice_df.empty else '')
-#     if country == 'Portugal':
-#         nif = st.text_input('NIF:')
 
 if st.button('Overwrite details'):
     # Put the details in the DataFrame
@@ -110,13 +97,6 @@ if st.button('Overwrite details'):
     st.session_state.invoice_df.loc[0, 'Check-out date'] = checkout_date.strftime('%d-%m-%Y')
     st.session_state.invoice_df.loc[0, 'Passport (or ID) number'] = passport
     st.session_state.invoice_df.loc[0, 'Country of residence'] = country
-
-    # invoice_df.loc[0, 'First name'] = first_name
-    # invoice_df.loc[0, 'Last name'] = last_name
-    # invoice_df.loc[0, 'Check-in date'] = checkin_date.strftime('%d-%m-%Y')
-    # invoice_df.loc[0, 'Check-out date'] = checkout_date.strftime('%d-%m-%Y')
-    # invoice_df.loc[0, 'Passport (or ID) number'] = passport
-    # invoice_df.loc[0, 'Country of residence'] = country
 
 # Display the updated DataFrame
 st.session_state.invoice_df = st.data_editor(st.session_state.invoice_df, hide_index=True)
@@ -152,11 +132,14 @@ if st.button('Issue invoice'):
 
         # Run invoice automation with the adapted callback
         invoice_callback = lambda message: update_invoice_ui(message, message_placeholder)
-        web_automation.fill_in_invoice(invoice_callback, 
+        screenshot_stream = web_automation.fill_in_invoice(invoice_callback, 
                                        st.session_state.invoice_df, 
                                        invoice_amount, 
                                        invoice_date, 
                                        nif)
+        
+        # Display the screenshot
+        st.image(screenshot_stream, caption="Screenshot of the Invoice Submission")
     
         if st.session_state.invoice_completed:
             st.success('Invoice issued successfully!')

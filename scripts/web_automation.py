@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+import io
 import time
 import json
 import os
@@ -139,6 +140,9 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
     else:
         date = date.strftime('%Y-%m-%d')
 
+    # Initialize screenshot_stream at the beginning
+    screenshot_stream = io.BytesIO()
+
     try:
 
         with open(countries_mapping) as f:
@@ -256,6 +260,10 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         selo_.send_keys(selo)
         time.sleep(2)
 
+        # Capture the screenshot directly into a BytesIO object
+        screenshot_stream.write(web.get_screenshot_as_png())
+        screenshot_stream.seek(0)  # Move to the beginning of the stream
+
         callback("Submitting the invoice (first button)...")
         first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[1]/div[1]/div[1]/div[3]/button')
         web.execute_script("arguments[0].click();", first_emitir_)  
@@ -266,13 +274,18 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         web.execute_script("arguments[0].click();", second_emitir_)  
         time.sleep(2)
 
-        # time.sleep(10) # NOTE: for debugging purposes
+        # time.sleep(10) # NOTE: for debugging purposes when running automation in browser
 
         callback("Done.")
 
     except Exception as e:
         callback(f"Error when issuing the invoice: {e}")
 
+        # Optionally capture a screenshot at the point of error if possible
+        screenshot_stream.write(web.get_screenshot_as_png())
+        screenshot_stream.seek(0)
+
     finally:
         web.quit()
+        return screenshot_stream
 
