@@ -187,9 +187,6 @@ def get_form(
 
 ###--- Invoice-related functions ---###
 
-# Define the SCOPES. If modifying it, delete the token.pickle file.
-SCOPES_GMAIL = ['https://www.googleapis.com/auth/gmail.readonly']
-
 def get_message_body(msg):
     if 'parts' in msg['payload']:
         for part in msg['payload']['parts']:
@@ -203,6 +200,9 @@ def get_emails(
         token_name='gmail_token.pickle',
         emails_name='emails.json'
     ):
+
+    # Define the SCOPES. If modifying it, delete the token.pickle file.
+    SCOPES_GMAIL = ['https://www.googleapis.com/auth/gmail.readonly']
     
     # Check if emails.json exists in S3 and was last updated today
     if object_exists(bucket_name, emails_name):
@@ -276,4 +276,3 @@ def get_emails(
     s3.put_object(Bucket=bucket_name, Key=update_time_object_name, Body=update_time_str)
 
     return f"s3://{bucket_name}/{emails_name}"
-
