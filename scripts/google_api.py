@@ -28,7 +28,8 @@ SCOPES_SHEET = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = '1XNzUH6ydpDt0apgL-a7wuxgxNgRRKMsNwKPpJ74ejbk'
-SAMPLE_RANGE_NAME = 'Form Responses 1!A1:AI10000'
+# SAMPLE_RANGE_NAME = 'Form Responses 1!A1:AI10000'
+SAMPLE_RANGE_NAME = 'Form Responses 1!A1:BP10000' # allowing for 3 guests
 
     
 def get_form_with_token(
