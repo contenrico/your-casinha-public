@@ -154,11 +154,10 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
 
-        # web = webdriver.Chrome(options=chrome_options)
-        web = webdriver.Chrome() # NOTE: for debugging purposes
+        web = webdriver.Chrome(options=chrome_options)
+        # web = webdriver.Chrome() # NOTE: for debugging purposes
 
         callback("Opening the IRS website...")
-        # url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirDocumentos'
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirfaturaV2'
         web.get(url)
 
@@ -189,34 +188,16 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
 
         callback("Filling in the date and type of invoice...")
         # Input date and type of invoice
-        # date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[1]/lf-date/div/div[1]/input')
         date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/div/dados-de-operacao-v2/div/div[3]/div[2]/div[1]/lf-date/div/div[1]/input')
         date_.send_keys(date)              
 
-        # type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[2]/lf-dropdown/div/select')
         type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/div/dados-de-operacao-v2/div/div[3]/div[2]/div[2]/lf-dropdown/div/select')
         type_.send_keys('Fatura-Recibo')
-        
-        # # Scroll into view (if needed)
-        # emitir_button = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-documentos-app-v2/emitir-documentos-form-v2/div[1]/div[2]/div/div/div/div[3]/div/div[3]/button')
-        # web.execute_script("arguments[0].scrollIntoView(true);", emitir_button)
-        # time.sleep(1)  # Just to be safe, give it a moment
-
-        # # Click using JavaScript
-        # web.execute_script("arguments[0].click();", emitir_button)    
+          
         time.sleep(2)
 
         callback("Filling in the invoice details...")
         # Get all fields
-        # country_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[1]/lf-dropdown/div/select')      
-        # name_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[2]/div/lf-text/div/input')
-        # payment_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[1]/pf-radio/div/div[1]/label/input')
-        # description_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[2]/div/textarea')
-        # iva_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[6]/div/div[1]/lf-dropdown/div/select')
-        # incidencia_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[7]/div[1]/div/lf-dropdown/div/select')
-        # amount_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[4]/div/div/div/input')
-        # selo_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[8]/div/div/div/input')
-
         country_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[1]/div[1]/lf-dropdown/div/select')      
         name_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[2]/div/lf-text/div/input')
         payment_ = web.find_element(By.XPATH, '//*[@id="motivoEmissao"]/div/div/pf-radio/div/div[1]/label/input')
@@ -227,11 +208,9 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         country_.send_keys(country)
 
         if country.lower() == 'portugal':
-            # nif_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[3]/lf-nif/div/input')
             nif_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[1]/div[2]/lf-nif/div/input')
             nif_.send_keys(invoice_nif)
         else:
-            # passport_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-adquirente/div/div[2]/div[1]/div[2]/lf-text/div/input')
             passport_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[1]/div[2]/lf-text/div/input')
             passport = row['Passport (or ID) number']
             passport_.send_keys(passport)
@@ -251,8 +230,6 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         amount_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[3]/div/input')
         iva_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[11]/div[1]/lf-dropdown/div/select')
         guardar_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[3]/button[2]')
-        # incidencia_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[7]/div[1]/div/lf-dropdown/div/select')
-        # selo_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[2]/div/dados-transmissao/div/div[2]/div[8]/div/div/div/input')
 
         type_.send_keys('Serviço')
         reference_.send_keys('Alojamento Local') # TODO confirm
@@ -281,14 +258,6 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         iva = '6%'
         iva_.send_keys(iva)
 
-        # TODO remove
-        # incidencia = 'Sem retenção - Art.101º, n.º1 do CIRS'
-        # incidencia_.send_keys(incidencia)
-        # selo = '0'
-        # selo_.send_keys(selo)
-
-        time.sleep(15) # TODO remove
-
         # Capture the screenshot directly into a BytesIO object
         screenshot_stream.write(web.get_screenshot_as_png())
         screenshot_stream.seek(0)  # Move to the beginning of the stream
@@ -296,23 +265,17 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         guardar_.click()
         time.sleep(1)
 
-        # Capture the screenshot directly into a BytesIO object TODO delete
-        # screenshot_stream.write(web.get_screenshot_as_png())
-        # screenshot_stream.seek(0)  # Move to the beginning of the stream
-
         callback("Submitting the invoice (first button)...")
-        # first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app/emitir-form/div[1]/div[1]/div[1]/div[1]/div[3]/button')
         first_emitir_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[1]/div[1]/div[1]/div[2]/button')
         web.execute_script("arguments[0].click();", first_emitir_)  
         time.sleep(2)
 
-        # callback("Submitting the invoice (second button)...")
-        # # second_emitir_ = web.find_element(By.XPATH, '//*[@id="emitirModal"]/div/div/div[3]/button[2]')
-        # second_emitir_ = web.find_element(By.XPATH, '//*[@id="confirmarEmissaoModal"]/confirmar-emissao/div/div/div[3]/button[2]')
-        # web.execute_script("arguments[0].click();", second_emitir_)  
-        # time.sleep(2)
+        callback("Submitting the invoice (second button)...")
+        second_emitir_ = web.find_element(By.XPATH, '//*[@id="confirmarEmissaoModal"]/confirmar-emissao/div/div/div[3]/button[2]')
+        web.execute_script("arguments[0].click();", second_emitir_)  
+        time.sleep(2)
 
-        time.sleep(10) # NOTE: for debugging purposes when running automation in browser
+        # time.sleep(10) # NOTE: for debugging purposes when running automation in browser
 
         callback("Done.")
 
