@@ -69,7 +69,7 @@ if not st.session_state.clean_df.empty:
                                                   'Passport (or ID) number', 
                                                   'Country of residence']].head(1)
 # Get list of countries
-with open('parameters/countries_mapping.json') as f:
+with open('parameters/countries_mapping.json', 'r', encoding='utf-8') as f:
     countries = json.load(f)
 countries_list = list(countries.keys())
 
