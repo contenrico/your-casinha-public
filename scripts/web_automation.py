@@ -224,6 +224,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
 
         # Find additional fields
         type_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[4]/div[1]/lf-dropdown/div/select')
+        type_ref = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[4]/div[2]/lf-dropdown/div/select')
         reference_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[5]/div/lf-text/div/input')
         description_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[6]/div/lf-textarea/div/textarea')
         unit_ = web.find_element(By.XPATH,'//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[2]/lf-dropdown/div/select')
@@ -232,6 +233,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         guardar_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[3]/button[2]')
 
         type_.send_keys('Serviço')
+        type_ref.send_keys('Outro')
         reference_.send_keys('Alojamento Local')
 
         checkin_date = pd.to_datetime(row['Check-in date'], dayfirst=True).strftime('%d/%m/%Y')
@@ -275,7 +277,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         web.execute_script("arguments[0].click();", second_emitir_)  
         time.sleep(2)
 
-        # time.sleep(10) # NOTE: for debugging purposes when running automation in browser
+        # time.sleep(20) # NOTE: for debugging purposes when running automation in browser
 
         callback("Done.")
 
