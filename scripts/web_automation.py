@@ -220,7 +220,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
 
         payment_.click()
         add_service_.click()
-        time.sleep(1)
+        time.sleep(2)
 
         # Find additional fields
         type_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[4]/div[1]/lf-dropdown/div/select')
@@ -228,11 +228,11 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         description_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[6]/div/lf-textarea/div/textarea')
         unit_ = web.find_element(By.XPATH,'//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[2]/lf-dropdown/div/select')
         amount_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[3]/div/input')
-        iva_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[11]/div[1]/lf-dropdown/div/select')
+        iva_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[10]/div[1]/lf-dropdown/div/select')
         guardar_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[3]/button[2]')
 
         type_.send_keys('Serviço')
-        reference_.send_keys('Alojamento Local') # TODO confirm
+        reference_.send_keys('Alojamento Local')
 
         checkin_date = pd.to_datetime(row['Check-in date'], dayfirst=True).strftime('%d/%m/%Y')
         checkout_date = pd.to_datetime(row['Check-out date'], dayfirst=True).strftime('%d/%m/%Y')
