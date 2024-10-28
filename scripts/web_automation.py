@@ -201,7 +201,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         country_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[1]/div[1]/lf-dropdown/div/select')      
         name_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-adquirente-v2/div[1]/div[2]/div[2]/div/lf-text/div/input')
         payment_ = web.find_element(By.XPATH, '//*[@id="motivoEmissao"]/div/div/pf-radio/div/div[1]/label/input')
-        add_service_ = web.find_element(By.XPATH, '//*[@id="Bens&ServicosFT"]/div[3]/div/table/tfoot/tr/td/button')
+        add_service_ = web.find_element(By.XPATH, '//*[@id="Bens&ServicosFT"]/div/div/table/tfoot/tr/td/button')
 
         # Write in fields
         country = countries[row['Country of residence']]
