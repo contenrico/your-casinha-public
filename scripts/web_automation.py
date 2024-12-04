@@ -40,7 +40,8 @@ def fill_in_sef_form(df, callback):
         web = webdriver.Chrome(options=chrome_options)
 
         callback("Opening the SEF website...")
-        url = 'https://siba.sef.pt/s/FB.aspx?ReturnUrl=%2fs%2fbal%2fLotesEnvio.aspx'
+        # url = 'https://siba.sef.pt/s/FB.aspx?ReturnUrl=%2fs%2fbal%2fLotesEnvio.aspx'
+        url = 'https://siba.ssi.gov.pt/s/FB.aspx?ReturnUrl=%2fs%2fau%2fDefault.aspx'
         web.get(url)
         time.sleep(2)
 
@@ -55,6 +56,12 @@ def fill_in_sef_form(df, callback):
 
         submit_button = web.find_element('id', 'Conteudo_btnConfirmar')
         web.execute_script("arguments[0].click();", submit_button)
+        time.sleep(2)
+
+        entrega_dropdown = web.find_element(By.XPATH, '//*[@id="myNavbar"]/ul[1]/li[1]/a')
+        boletins_button = web.find_element(By.XPATH, '//*[@id="myNavbar"]/ul[1]/li[1]/ul/li[1]/a')
+        entrega_dropdown.click()
+        boletins_button.click()
         time.sleep(2)
 
         callback("Creating a new list...")
