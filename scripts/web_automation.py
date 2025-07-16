@@ -171,22 +171,24 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         time.sleep(2)
 
         callback("Filling in the login details...")
-        # Find the label element by its text content (assuming "NIF" is the text)
-        label_element = web.find_element(By.XPATH, "//label[span='NIF']")
+        # Find the NIF button
+        label_element = web.find_element(By.XPATH, '//*[@id="radix-:r0:-trigger-N"]')
+        
 
         # Click the label element to perform the action
         label_element.click()
         time.sleep(1)
 
         # Find and fill in the input fields
-        nif = web.find_element('id', 'username')
-        senha = web.find_element('id', 'password-nif')
+        nif = web.find_element(By.XPATH, '/html/body/div/div/main/div[1]/div[3]/div[1]/div[3]/form/div[1]/div[2]/div/input')
+        senha = web.find_element(By.XPATH, '/html/body/div/div/main/div[1]/div[3]/div[1]/div[3]/form/div[2]/div[2]/div/input')
 
         nif.send_keys(pdf_nif)
         senha.send_keys(pdf_senha)
 
         # Locate and click the submit button
-        submit_button = web.find_element('id', 'sbmtLogin')
+        # submit_button = web.find_element('id', 'sbmtLogin')
+        submit_button = web.find_element(By.XPATH, '//*[@id="radix-:r0:-content-N"]/form/button')
         submit_button.click()
         time.sleep(2)
 
