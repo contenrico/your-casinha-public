@@ -161,8 +161,14 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
 
+        # chrome_options.add_argument("--window-size=1920,1080")  # Set explicit window size
+
         web = webdriver.Chrome(options=chrome_options)
         # web = webdriver.Chrome() # NOTE: for debugging purposes
+
+        # Set window size
+        web.set_window_size(756, 556)
+        web.set_window_position(22, 22)
 
         callback("Opening the IRS website...")
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirfaturaV2'
