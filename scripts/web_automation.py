@@ -168,12 +168,11 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirfaturaV2'
         web.get(url)
 
-        time.sleep(2)
+        time.sleep(3)
 
         callback("Filling in the login details...")
         # Find the NIF button
-        label_element = web.find_element(By.XPATH, '/html/body/div/div/main/div[1]/div[3]/div[1]/div[1]/div/div/button[2]')
-        
+        label_element = web.find_element(By.XPATH, '//*[@id="radix-:r0:-trigger-N"]')
 
         # Click the label element to perform the action
         label_element.click()
@@ -187,7 +186,6 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         senha.send_keys(pdf_senha)
 
         # Locate and click the submit button
-        # submit_button = web.find_element('id', 'sbmtLogin')
         submit_button = web.find_element(By.XPATH, '//*[@id="radix-:r0:-content-N"]/form/button')
         submit_button.click()
         time.sleep(2)
