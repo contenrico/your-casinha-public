@@ -172,7 +172,7 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
 
         callback("Filling in the login details...")
         # Find the NIF button
-        label_element = web.find_element(By.XPATH, '//*[@id="radix-:r0:-trigger-N"]')
+        label_element = web.find_element(By.XPATH, '/html/body/div/div/main/div[1]/div[3]/div[1]/div[1]/div/div/button[2]')
         
 
         # Click the label element to perform the action
