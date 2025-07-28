@@ -196,6 +196,16 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         submit_button.click()
         time.sleep(2)
 
+        # Continue login button - new after MFA announcement
+        callback("Clicking on 'Continuar Login'...")
+        try:
+            continue_button = web.find_element(By.XPATH, '/html/body/div/div/div[1]/div/div[3]/button[1]')
+            continue_button.click()
+            time.sleep(2)
+        except Exception as e:
+            callback(f"'Continuar Login' button not found! Error: {e}")
+            pass
+
         callback("Logged in successfully.")
         time.sleep(1)
 
