@@ -3,7 +3,7 @@ import streamlit as st
 
 st.session_state.authenticated = False
 
-# Password protection
+# Password protection - test
 def check_password():
     """Returns `True` if the user had the correct password."""
 
