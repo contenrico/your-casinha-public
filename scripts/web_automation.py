@@ -38,6 +38,11 @@ def fill_in_sef_form(df, callback):
         chrome_options.add_argument("--disable-dev-shm-usage")
 
         web = webdriver.Chrome(options=chrome_options)
+        # web = webdriver.Chrome() # NOTE: for debugging purposes
+
+        # Set window size
+        web.set_window_size(1200, 768)
+        web.set_window_position(22, 47)
 
         callback("Opening the SEF website...")
         # url = 'https://siba.sef.pt/s/FB.aspx?ReturnUrl=%2fs%2fbal%2fLotesEnvio.aspx'
