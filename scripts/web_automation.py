@@ -172,8 +172,12 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         # web = webdriver.Chrome() # NOTE: for debugging purposes
 
         # Set window size
-        web.set_window_size(756, 556)
-        web.set_window_position(22, 22)
+        # web.set_window_size(756, 556)
+        # web.set_window_position(22, 22)
+
+        # Set larger window size
+        web.set_window_size(1200, 768)
+        web.set_window_position(22, 47)
 
         callback("Opening the IRS website...")
         url = r'https://irs.portaldasfinancas.gov.pt/recibos/portal/emitir/emitirfaturaV2'
