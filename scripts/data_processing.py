@@ -147,8 +147,13 @@ def convert_messages_to_df(emails_json='emails.json'):
         obj = download_object(bucket_name, emails_json)
         messages = json.loads(obj)
 
-        # Filter messages based on subject and sender criteria
-        filtered_messages = [msg for msg in messages if "payout was sent" in msg["Subject"] and "airbnb" in msg["From"].lower()]
+        # Filter messages: subject contains both "sent" and "payout", sender contains "airbnb"
+        filtered_messages = [
+            msg for msg in messages 
+            if "sent" in msg["Subject"].lower() 
+            and "payout" in msg["Subject"].lower() 
+            and "airbnb" in msg["From"].lower()
+        ]
 
         # Create lists to store extracted data
         dates = []
@@ -157,13 +162,12 @@ def convert_messages_to_df(emails_json='emails.json'):
         # Extract date and payout amount from filtered messages
         for msg in filtered_messages:
             date_str = msg["Date"]
-            message = msg["Message"]
+            subject = msg["Subject"]
 
-            # Update the regex to handle currency symbols, thousands separators, and decimal points
-            amount_match = re.search(r'[\u20ac$£]?[,\d]+\.?\d*', message)
+            # Extract payout amount from subject line (e.g., "€ 487.43" or "$ 1,234.56")
+            amount_match = re.search(r'[\u20ac$£]\s?[,\d]+\.?\d*', subject)
             if amount_match:
-                # Remove any currency symbols and thousands separators before capturing the amount
-                payout_amount = amount_match.group(0).replace(',', '').replace('\u20ac', '').replace('$', '').replace('£', '')
+                payout_amount = amount_match.group(0).replace(',', '').replace('\u20ac', '').replace('$', '').replace('£', '').strip()
             else:
                 payout_amount = None
 
@@ -184,7 +188,6 @@ def convert_messages_to_df(emails_json='emails.json'):
         # Convert Date column to string for better display
         df['Date'] = df['Date'].dt.strftime('%d-%m-%Y')
 
-        # Display the sorted DataFrame
         return df
 
 
