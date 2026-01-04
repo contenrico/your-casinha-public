@@ -219,11 +219,9 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         web.set_window_position(22, 47)
         
         # Input date and type of invoice              
-        # date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/div/dados-de-operacao-v2/div/div[3]/div[2]/div[1]/lf-date/div/div[1]/input')
         date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[2]/div[1]/lf-date/div/div[1]/input')
         date_.send_keys(date)              
 
-        # type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/div/dados-de-operacao-v2/div/div[3]/div[2]/div[2]/lf-dropdown/div/select')
         type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[2]/div[2]/lf-dropdown/div/select')
         type_.send_keys('Fatura-Recibo')
           
@@ -261,8 +259,8 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         reference_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[5]/div/lf-text/div/input')
         description_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[6]/div/lf-textarea/div/textarea')
         unit_ = web.find_element(By.XPATH,'//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[2]/lf-dropdown/div/select')
-        amount_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[8]/div[3]/div/input')
-        iva_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[2]/div/div[10]/div[1]/lf-dropdown/div/select')
+        amount_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div[1]/div/div[2]/div/div[9]/div[1]/div[1]/input')
+        iva_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div[1]/div/div[2]/div/div[11]/div/lf-dropdown/div/select')
         guardar_ = web.find_element(By.XPATH, '//*[@id="adicionarProdutosModal"]/adicionar-produtos/div/div/div[3]/button[2]')
 
         type_.send_keys('Serviço')
@@ -275,7 +273,6 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         address = 'RUA DE MARVILA N 54 R/C E 1950-199 LISBOA'
         description = f'Prestação de serviços de alojamento mobilado para turistas, da data {checkin_date} a {checkout_date}, no AL {al_number}, sito na morada: {address}'
         description_.send_keys(description)
-
         unit_.send_keys('N/A')
 
         amount = float(amount)
