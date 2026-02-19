@@ -218,11 +218,12 @@ def fill_in_invoice(callback, filtered_df, amount, date=None, invoice_nif=None):
         web.set_window_size(1200, 768)
         web.set_window_position(22, 47)
         
-        # Input date and type of invoice              
-        date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[2]/div[1]/lf-date/div/div[1]/input')
+        # Input date and type of invoice
+        date_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[3]/div[1]/lf-date/div/div[1]/input')
+        
         date_.send_keys(date)              
 
-        type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[2]/div[2]/lf-dropdown/div/select')
+        type_ = web.find_element(By.XPATH, '//*[@id="main-content"]/div/div/emitir-app-v2/emitir-form-v2/div[1]/div[2]/div/dados-de-operacao-v2/div/div[3]/div[3]/div[2]/lf-dropdown/div/select')
         type_.send_keys('Fatura-Recibo')
           
         time.sleep(2)
