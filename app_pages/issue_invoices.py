@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import streamlit as st
 
+from app_pages.dev_controls import dev_dry_run, dev_headless, init_dev_controls, render_dev_control_panel
 from src.casinha.automation.invoices import fill_in_invoice
 from src.casinha.config import countries_mapping
 from src.casinha.domain.columns import (
@@ -27,6 +28,8 @@ from src.casinha.services.transforms import (
 from src.casinha.config import S3_KEY_EMAILS
 
 st.title("Issue New Invoices")
+
+init_dev_controls()
 
 # ---------------------------------------------------------------------------
 # Session-state initialisation
@@ -164,7 +167,7 @@ edited_invoice_df = st.data_editor(
 # Step 3 – issue invoice
 # ---------------------------------------------------------------------------
 
-if st.button("Issue invoice"):
+if st.button("Issue invoice", type="primary"):
     if invoice_amount is None:
         st.error("Please fetch payout amounts before issuing an invoice.")
     elif edited_invoice_df.empty:
@@ -179,6 +182,8 @@ if st.button("Issue invoice"):
             amount=invoice_amount,
             invoice_date=invoice_date,
             invoice_nif=nif or None,
+            headless=dev_headless(),
+            dry_run=dev_dry_run(),
         )
 
         if result.screenshot:
@@ -188,3 +193,5 @@ if st.button("Issue invoice"):
             st.success(result.message)
         else:
             st.error(result.message)
+
+render_dev_control_panel()

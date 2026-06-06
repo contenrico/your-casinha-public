@@ -106,12 +106,29 @@ def pdf_nif() -> str:
 def pdf_senha() -> str:
     return _secret("PDF_SENHA")
 
+def eva_nif() -> str:
+    return _secret("EVA_NIF")
+
+def eva_senha() -> str:
+    return _secret("EVA_SENHA")
+
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
 
 def app_password() -> str:
     return _secret("password")
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+
+def environment() -> str:
+    """Return the current environment ("dev"/"prod"), defaulting to "prod"."""
+    try:
+        return _secret("ENVIRONMENT").strip().lower()
+    except KeyError:
+        return "prod"
 
 # ---------------------------------------------------------------------------
 # Parameter file loader (countries / nationalities mappings)

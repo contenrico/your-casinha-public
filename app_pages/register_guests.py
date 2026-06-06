@@ -71,7 +71,7 @@ edited_sef_df = st.data_editor(
 # Step 2 – register on SEF
 # ---------------------------------------------------------------------------
 
-if st.button("Register guests on SEF"):
+if st.button("Register guests on SEF", type="primary"):
     if edited_sef_df.empty:
         st.warning("No guests to register. Please fetch form responses first.")
     else:

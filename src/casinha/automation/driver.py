@@ -34,7 +34,14 @@ class AutomationResult:
 # Driver factory
 # ---------------------------------------------------------------------------
 
-def make_driver(*, headless: bool = True, width: int = 1200, height: int = 768) -> WebDriver:
+def make_driver(
+    *,
+    headless: bool = True,
+    width: int = 1200,
+    height: int = 768,
+    x: int = 22,
+    y: int = 47,
+) -> WebDriver:
     """Return a configured Chrome WebDriver instance."""
     opts = Options()
     if headless:
@@ -44,7 +51,7 @@ def make_driver(*, headless: bool = True, width: int = 1200, height: int = 768) 
 
     driver = webdriver.Chrome(options=opts)
     driver.set_window_size(width, height)
-    driver.set_window_position(22, 47)
+    driver.set_window_position(x, y)
     return driver
 
 
