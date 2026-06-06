@@ -30,11 +30,8 @@ search_by_name = st.checkbox("Search by name")
 
 first_name = last_name = ""
 if search_by_name:
-    col1, col2 = st.columns(2)
-    with col1:
-        first_name = st.text_input("First name:")
-    with col2:
-        last_name = st.text_input("Last name:")
+    first_name = st.text_input("First name:")
+    last_name = st.text_input("Last name:")
 else:
     checkin_date = st.date_input(
         "Check-in date:", value=pd.to_datetime("today"), format="DD-MM-YYYY"
@@ -53,30 +50,40 @@ if st.button("Get form responses"):
                 filtered = filter_on_checkin_date(clean_df, checkin_date_str)
 
             st.session_state.sef_df = filtered[SEF_DISPLAY_COLS]
+            # Clear stale editor deltas so fresh data is shown cleanly.
+            st.session_state.pop("sef_editor", None)
         except Exception as exc:
             st.error(f"Failed to fetch data: {exc}")
 
-st.session_state.sef_df = st.data_editor(
-    st.session_state.sef_df, hide_index=True, key="sef_editor"
+# Transposed: field names become rows, guests become columns ("Guest 1", "Guest 2", …).
+# The base DataFrame is kept stable; edits are captured in a local variable.
+_sef_display = st.session_state.sef_df.reset_index(drop=True).T.rename(
+    columns=lambda i: f"Guest {i + 1}"
 )
+edited_sef_df = st.data_editor(
+    _sef_display,
+    use_container_width=True,
+    height=38 + len(_sef_display) * 35,
+    key="sef_editor",
+).T.reset_index(drop=True)
 
 # ---------------------------------------------------------------------------
 # Step 2 – register on SEF
 # ---------------------------------------------------------------------------
 
 if st.button("Register guests on SEF"):
-    if st.session_state.sef_df.empty:
+    if edited_sef_df.empty:
         st.warning("No guests to register. Please fetch form responses first.")
     else:
         progress_placeholder = st.empty()
         result = fill_in_sef_form(
-            df=st.session_state.sef_df,
+            df=edited_sef_df,
             callback=lambda msg: progress_placeholder.text(msg),
         )
 
         if result.success:
             try:
-                append_records(st.session_state.sef_df)
+                append_records(edited_sef_df)
             except FileNotFoundError as exc:
                 st.warning(f"Guests registered but records not saved: {exc}")
             st.success(result.message)

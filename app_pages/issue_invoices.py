@@ -60,7 +60,7 @@ if st.button("Get payout amounts"):
         except Exception as exc:
             st.error(f"Failed to fetch payout data: {exc}")
 
-st.dataframe(st.session_state.payout_df, hide_index=True)
+st.dataframe(st.session_state.payout_df, hide_index=True, use_container_width=True)
 
 invoice_amount: float | None = None
 if not st.session_state.payout_df.empty:
@@ -85,6 +85,8 @@ if st.button("Fetch guest details"):
         filtered = filter_on_checkout_date(st.session_state.clean_df, checkout_date_str)
         if not filtered.empty:
             st.session_state.invoice_df = filtered[INVOICE_DISPLAY_COLS].head(1)
+    # Clear stale editor deltas so fresh data is shown cleanly.
+    st.session_state.pop("invoice_editor", None)
 
 countries = countries_mapping()
 countries_list = list(countries.keys())
@@ -92,45 +94,43 @@ countries_list = list(countries.keys())
 inv = st.session_state.invoice_df
 
 st.subheader("Details on the invoice:")
-col1, col2 = st.columns(2)
-with col1:
-    first_name = st.text_input(
-        "First name:", value=inv[FIRST_NAME].values[0] if not inv.empty else ""
-    )
-    checkin_input = st.date_input(
-        "Check-in date:",
-        format="DD-MM-YYYY",
-        value=pd.to_datetime(inv[CHECKIN_DATE].values[0], dayfirst=True) if not inv.empty else pd.to_datetime("today"),
-        key="checkin_date_detail",
-    )
-    invoice_date = st.date_input(
-        "Invoice date:",
-        format="DD-MM-YYYY",
-        value=pd.to_datetime(checkout_date_str, dayfirst=True),
-        key="invoice_date_detail",
-    )
-    passport = st.text_input(
-        "Passport number:", value=inv[PASSPORT_NUMBER].values[0] if not inv.empty else ""
-    )
-with col2:
-    last_name = st.text_input(
-        "Last name:", value=inv[LAST_NAME].values[0] if not inv.empty else ""
-    )
-    checkout_input = st.date_input(
-        "Check-out date:",
-        format="DD-MM-YYYY",
-        value=pd.to_datetime(inv[CHECKOUT_DATE].values[0], dayfirst=True) if not inv.empty else pd.to_datetime("today"),
-        key="checkout_date_detail",
-    )
-    default_country_idx = (
-        countries_list.index(inv[COUNTRY_OF_RESIDENCE].values[0])
-        if not inv.empty and inv[COUNTRY_OF_RESIDENCE].values[0] in countries_list
-        else 0
-    )
-    country = st.selectbox("Country of residence:", countries_list, index=default_country_idx)
-    nif: str | None = None
-    if country == "Portugal":
-        nif = st.text_input("NIF:")
+
+first_name = st.text_input(
+    "First name:", value=inv[FIRST_NAME].values[0] if not inv.empty else ""
+)
+last_name = st.text_input(
+    "Last name:", value=inv[LAST_NAME].values[0] if not inv.empty else ""
+)
+checkin_input = st.date_input(
+    "Check-in date:",
+    format="DD-MM-YYYY",
+    value=pd.to_datetime(inv[CHECKIN_DATE].values[0], dayfirst=True) if not inv.empty else pd.to_datetime("today"),
+    key="checkin_date_detail",
+)
+checkout_input = st.date_input(
+    "Check-out date:",
+    format="DD-MM-YYYY",
+    value=pd.to_datetime(inv[CHECKOUT_DATE].values[0], dayfirst=True) if not inv.empty else pd.to_datetime("today"),
+    key="checkout_date_detail",
+)
+invoice_date = st.date_input(
+    "Invoice date:",
+    format="DD-MM-YYYY",
+    value=pd.to_datetime(checkout_date_str, dayfirst=True),
+    key="invoice_date_detail",
+)
+passport = st.text_input(
+    "Passport number:", value=inv[PASSPORT_NUMBER].values[0] if not inv.empty else ""
+)
+default_country_idx = (
+    countries_list.index(inv[COUNTRY_OF_RESIDENCE].values[0])
+    if not inv.empty and inv[COUNTRY_OF_RESIDENCE].values[0] in countries_list
+    else 0
+)
+country = st.selectbox("Country of residence:", countries_list, index=default_country_idx)
+nif: str | None = None
+if country == "Portugal":
+    nif = st.text_input("NIF:")
 
 if st.button("Overwrite details"):
     st.session_state.invoice_df = pd.DataFrame(
@@ -145,10 +145,20 @@ if st.button("Overwrite details"):
             }
         ]
     )
+    # Clear stale editor deltas so the overwritten data is shown cleanly.
+    st.session_state.pop("invoice_editor", None)
 
-st.session_state.invoice_df = st.data_editor(
-    st.session_state.invoice_df, hide_index=True, key="invoice_editor"
+# Transposed: field names become rows, guest values become a single column ("Guest 1").
+# The base DataFrame is kept stable; edits are captured in a local variable.
+_invoice_display = st.session_state.invoice_df.reset_index(drop=True).T.rename(
+    columns=lambda i: f"Guest {i + 1}"
 )
+edited_invoice_df = st.data_editor(
+    _invoice_display,
+    use_container_width=True,
+    height=38 + len(_invoice_display) * 35,
+    key="invoice_editor",
+).T.reset_index(drop=True)
 
 # ---------------------------------------------------------------------------
 # Step 3 – issue invoice
@@ -157,7 +167,7 @@ st.session_state.invoice_df = st.data_editor(
 if st.button("Issue invoice"):
     if invoice_amount is None:
         st.error("Please fetch payout amounts before issuing an invoice.")
-    elif st.session_state.invoice_df.empty:
+    elif edited_invoice_df.empty:
         st.warning("No guest details available. Please fetch or enter guest details.")
     elif country == "Portugal" and nif and len(nif) not in (0, 9):
         st.error("Please enter a valid NIF (9 digits) or leave blank.")
@@ -165,7 +175,7 @@ if st.button("Issue invoice"):
         progress_placeholder = st.empty()
         result = fill_in_invoice(
             callback=lambda msg: progress_placeholder.text(msg),
-            guest_df=st.session_state.invoice_df,
+            guest_df=edited_invoice_df,
             amount=invoice_amount,
             invoice_date=invoice_date,
             invoice_nif=nif or None,
