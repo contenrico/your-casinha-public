@@ -181,6 +181,9 @@ poetry.toml
 # Streamlit specific
 secrets.toml
 
+# macOS metadata
+.DS_Store
+
 # LSP config files
 pyrightconfig.json
 
