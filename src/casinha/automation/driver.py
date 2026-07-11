@@ -9,11 +9,13 @@ postback-heavy government portals.
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass, field
 from typing import Callable
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -34,6 +36,15 @@ class AutomationResult:
 # Driver factory
 # ---------------------------------------------------------------------------
 
+def _find_binary(*names: str) -> str | None:
+    """Return the first executable found on PATH from *names*, else None."""
+    for name in names:
+        path = shutil.which(name)
+        if path:
+            return path
+    return None
+
+
 def make_driver(
     *,
     headless: bool = True,
@@ -42,14 +53,28 @@ def make_driver(
     x: int = 22,
     y: int = 47,
 ) -> WebDriver:
-    """Return a configured Chrome WebDriver instance."""
+    """Return a configured Chrome/Chromium WebDriver instance.
+
+    On Streamlit Cloud (and other Debian hosts) the browser is installed via
+    ``packages.txt`` as ``chromium``/``chromium-driver``.  We point Selenium
+    explicitly at those binaries when they exist; otherwise we fall back to
+    Selenium Manager, which resolves a locally-installed Chrome for development.
+    """
     opts = Options()
     if headless:
-        opts.add_argument("--headless")
+        opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--disable-gpu")
 
-    driver = webdriver.Chrome(options=opts)
+    browser_path = _find_binary("chromium", "chromium-browser")
+    if browser_path:
+        opts.binary_location = browser_path
+
+    driver_path = _find_binary("chromedriver")
+    service = Service(executable_path=driver_path) if driver_path else None
+
+    driver = webdriver.Chrome(service=service, options=opts)
     driver.set_window_size(width, height)
     driver.set_window_position(x, y)
     return driver
