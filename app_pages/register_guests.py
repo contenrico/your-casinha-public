@@ -67,6 +67,24 @@ edited_sef_df = st.data_editor(
     key="sef_editor",
 ).T.reset_index(drop=True)
 
+# One remove button per guest (each guest is a column in the display above).
+# Clicking drops that guest while keeping any edits made in the editor.
+n_guests = len(edited_sef_df)
+if n_guests:
+    st.caption("Remove a guest:")
+    for i, col in enumerate(st.columns(n_guests)):
+        if col.button(
+            f"Remove Guest {i + 1}",
+            key=f"remove_guest_{i}",
+            use_container_width=True,
+        ):
+            st.session_state.sef_df = edited_sef_df.drop(index=i).reset_index(
+                drop=True
+            )
+            # Clear stale editor deltas so the remaining guests render cleanly.
+            st.session_state.pop("sef_editor", None)
+            st.rerun()
+
 # ---------------------------------------------------------------------------
 # Step 2 – register on SEF
 # ---------------------------------------------------------------------------
