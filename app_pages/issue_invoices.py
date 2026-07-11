@@ -47,6 +47,18 @@ for key, default in [
 # Step 1 – payout lookup
 # ---------------------------------------------------------------------------
 
+
+def populate_guest_details(checkout: str) -> None:
+    """Fill invoice_df from clean_df for the given check-out date string."""
+    st.session_state.invoice_df = pd.DataFrame()
+    if not st.session_state.clean_df.empty:
+        filtered = filter_on_checkout_date(st.session_state.clean_df, checkout)
+        if not filtered.empty:
+            st.session_state.invoice_df = filtered[INVOICE_DISPLAY_COLS].head(1)
+    # Clear stale editor deltas so fresh data is shown cleanly.
+    st.session_state.pop("invoice_editor", None)
+
+
 checkout_date = st.date_input(
     "Check-out date:", value=pd.to_datetime("today"), format="DD-MM-YYYY", key="checkout_date_filter"
 )
@@ -60,6 +72,8 @@ if st.button("Get payout amounts"):
             get_emails()
             emails_raw = json.loads(download_bytes(S3_KEY_EMAILS))
             st.session_state.payout_df = parse_payout_emails(emails_raw)
+            # Also populate the guest detail fields below off the same date.
+            populate_guest_details(checkout_date_str)
         except Exception as exc:
             st.error(f"Failed to fetch payout data: {exc}")
 
@@ -83,13 +97,7 @@ if not st.session_state.payout_df.empty:
 # ---------------------------------------------------------------------------
 
 if st.button("Fetch guest details"):
-    st.session_state.invoice_df = pd.DataFrame()
-    if not st.session_state.clean_df.empty:
-        filtered = filter_on_checkout_date(st.session_state.clean_df, checkout_date_str)
-        if not filtered.empty:
-            st.session_state.invoice_df = filtered[INVOICE_DISPLAY_COLS].head(1)
-    # Clear stale editor deltas so fresh data is shown cleanly.
-    st.session_state.pop("invoice_editor", None)
+    populate_guest_details(checkout_date_str)
 
 countries = countries_mapping()
 countries_list = list(countries.keys())
